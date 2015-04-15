@@ -1,0 +1,7 @@
+Pathfinder - Pathfinding project for CS3100
+
+Dependencies:
+    SFML
+    SFGUI
+    
+Also requires a C++11 compatible compiler, most require C++11 to be specified.
