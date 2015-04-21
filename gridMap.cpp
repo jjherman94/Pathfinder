@@ -4,10 +4,25 @@
 
 void gridMap::resize(unsigned width, unsigned height)
 {
-   //just set width/height and resize for now
+   //put old and sizes in an older map
+   auto oldMap = std::move(*this);
+   //set new size
    this->width = width;
    this->height = height;
+   //resize for new tiles
    tiles.resize(width*height);
+   //copy old tile statuses and weights
+   for(auto x = 0u; x < width; ++x)
+   {
+      for(auto y = 0u; y < height; ++y)
+      {
+         //only copy if the old map was big enough
+         if(x < oldMap.width && y < oldMap.height)
+         {
+            getTile(x, y) = oldMap.getTile(x, y);
+         }
+      }
+   }
 }
 
 Tile& gridMap::getTile(int x, int y)

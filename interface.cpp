@@ -208,10 +208,10 @@ void MainWindow::updateScrollBars()
             //the new value
             float newValue = old->GetValue();
             //if value is less than the minimum + visible then keep it
-            if(newValue + visible > maxSize)
+            if(newValue + visible > upper)
             {
                //otherwise just use the furthest value
-               newValue = maxSize - visible;
+               newValue = upper - visible;
             }
             //lower limit will always be 0
             auto adj = sfg::Adjustment::Create(newValue,
@@ -227,6 +227,8 @@ void MainWindow::updateScrollBars()
             scroller->GetAdjustment()->
                   GetSignal(sfg::Adjustment::OnChange).Connect(handler);
          }
+         //force resizing now
+         handler();
       };
    //now actually resize the scrollers
    resizeScroller(maxWidth, frameWidth, scrollHorz,
@@ -272,6 +274,32 @@ void MainWindow::run()
             //resize contents if needed
             handleResize();
          }
+         else if(event.type == sf::Event::MouseMoved)
+         {
+            //if a button is pressed then make/destroy walls
+            if(sf::Mouse::isButtonPressed(sf::Mouse::Left) ||
+               sf::Mouse::isButtonPressed(sf::Mouse::Right))
+            {
+               //set up parameters
+               auto frameAlloc = frame->GetAllocation();
+               auto xBase = view.getCenter().x - frameAlloc.width/2;
+               auto yBase = view.getCenter().y - frameAlloc.height/2;
+               auto xLim = frameAlloc.width + xBase;
+               auto yLim = frameAlloc.height + yBase;
+               auto x = event.mouseMove.x + xBase;
+               auto y = event.mouseMove.y + yBase;
+               //make sure that they are valid
+               if(x >= xBase && y >= yBase && x < xLim && y < yLim &&
+                  x/squareSize < grid.getWidth() &&
+                  y/squareSize < grid.getHeight())
+               {
+                  //get weight (-1 = wall, 0 = nothing)
+                  int weight = 0 - sf::Mouse::isButtonPressed(sf::Mouse::Left);
+                  //can mark the square now
+                  grid.getTile(x/squareSize, y/squareSize).weight = weight;
+               }
+            }
+         }
       }
 
       //update back end of SFGUI
@@ -316,6 +344,11 @@ void MainWindow::run()
                   case Tile::Status::visited:
                      rectColor = {127, 127, 127};
                      break;
+               }
+               //if weight is -1 then it is a wall
+               if(grid.getTile(x, y).weight == -1)
+               {
+                  rectColor = sf::Color::Black;
                }
                //set color and position and then draw
                rect.setFillColor(rectColor);
