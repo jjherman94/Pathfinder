@@ -2,6 +2,7 @@
 #define INTERFACE_H
 
 #include <SFGUI/SFGUI.hpp>
+#include "gridMap.h"
 
 class MainWindow
 {
@@ -22,7 +23,24 @@ private:
    //will stretch the table and produce other unwanted effects
    void addItemToTable(sfg::Widget::Ptr widget,
                        unsigned width);
+   //handles resizing of the grid
+   void handleGridResize();
+   //handles resizing of squares
+   void handleSquareResize();
+   //updates the scroll bars
+   void updateScrollBars();
 
+   //the grid containing the tiles
+   gridMap grid;
+   //location managers for the table
+   unsigned tableX;
+   unsigned tableY;
+   //the width of the menu on the side, in pixels
+   unsigned menuWidth;
+   //the size of the squares, in pixels
+   unsigned squareSize;
+
+   //GUI elements below here
    //for SFGUI to do anything
    sfg::SFGUI sfgui;
    //the two scroll bars
@@ -36,8 +54,6 @@ private:
    sf::View view;
    //the SFML window used for rendering
    sf::RenderWindow window;
-   //the width of the menu on the side, in pixels
-   unsigned menuWidth;
    //the desktop for rendering
    sfg::Desktop desktop;
    //the combo box used for the algorithms
@@ -47,11 +63,8 @@ private:
    sfg::Entry::Ptr yEntry;
    //check box for if algorithm is weighted or not
    sfg::CheckButton::Ptr isWeighted;
-   //location managers for the table
-   unsigned tableX;
-   unsigned tableY;
    //entry for size of squares
-   sfg::Entry::Ptr squareSize;
+   sfg::Entry::Ptr squareSizeEntry;
 };
 
 #endif // INTERFACE_H

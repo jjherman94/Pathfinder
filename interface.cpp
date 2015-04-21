@@ -1,9 +1,16 @@
 #include "interface.h"
 
+#include <functional>
+
 MainWindow::MainWindow(unsigned width,
                        unsigned height,
                        const char* title,
                        unsigned menuWidth) :
+   grid(),
+   tableX(0),
+   tableY(0),
+   menuWidth(menuWidth),
+   squareSize(0),
    sfgui(),
    scrollVert(sfg::Scrollbar::Create(sfg::Scrollbar::Orientation::VERTICAL)),
    scrollHorz(sfg::Scrollbar::Create()),
@@ -11,16 +18,16 @@ MainWindow::MainWindow(unsigned width,
    table(sfg::Table::Create()),
    view(),
    window(sf::VideoMode(width, height), title),
-   menuWidth(menuWidth),
    desktop(),
    algComboBox(sfg::ComboBox::Create()),
-   xEntry(sfg::Entry::Create("10")),
-   yEntry(sfg::Entry::Create("10")),
+   xEntry(sfg::Entry::Create("18")),
+   yEntry(sfg::Entry::Create("18")),
    isWeighted(sfg::CheckButton::Create("Is weighted?")),
-   tableX(0),
-   tableY(0),
-   squareSize(sfg::Entry::Create("8"))
+   squareSizeEntry(sfg::Entry::Create("32"))
 {
+   //resize things automatically
+   handleGridResize();
+   handleSquareResize();
    //add all of the components to the desktop (they won't look pretty yet)
    desktop.Add(scrollVert);
    desktop.Add(scrollHorz);
@@ -29,7 +36,11 @@ MainWindow::MainWindow(unsigned width,
    //link resize button up to resize function for map
    auto resizeButtonMap = sfg::Button::Create("Resize");
    auto resizeButtonSquare = sfg::Button::Create("Resize");
-   algComboBox->AppendItem("A*");
+   //set up callbacks
+   resizeButtonMap->GetSignal(sfg::Button::OnLeftClick).Connect
+            ([this](){handleGridResize();});
+   resizeButtonSquare->GetSignal(sfg::Button::OnLeftClick).Connect
+            ([this](){handleSquareResize();});
    //set up the table
    table->SetRowSpacings(5.f);
    //fill in the table
@@ -42,7 +53,7 @@ MainWindow::MainWindow(unsigned width,
    addItemToTable(yEntry, 1);
    addItemToTable(resizeButtonMap, 3);
    addItemToTable(sfg::Label::Create("Square Size:"), 1);
-   addItemToTable(squareSize, 1);
+   addItemToTable(squareSizeEntry, 1);
    addItemToTable(resizeButtonSquare, 1);
    //this is essentially a resize, makes window pretty
    handleResize();
@@ -100,6 +111,8 @@ void MainWindow::handleResize()
             static_cast<float>(frameWidth) / winWidth,
             static_cast<float>(frameHeight) / winHeight
    });
+   //now scroll bars have to be handled
+   updateScrollBars();
 }
 
 
@@ -116,6 +129,124 @@ void MainWindow::addItemToTable(sfg::Widget::Ptr widget,
       tableX = 0;
       ++tableY;
    }
+}
+
+void MainWindow::handleGridResize()
+{
+   //get the width and the height
+   std::string widthTemp = xEntry->GetText();
+   std::string heightTemp = yEntry->GetText();
+   auto width = atoi(widthTemp.c_str());
+   auto height = atoi(heightTemp.c_str());
+   //ignore invalid sizes
+   if(width <= 0 || height <= 0)
+   {
+      return;
+   }
+   //otherwise re-size the grid
+   grid.resize(width, height);
+   //also update scroll bars
+   updateScrollBars();
+}
+
+void MainWindow::handleSquareResize()
+{
+   std::string sizeTemp = squareSizeEntry->GetText();
+   auto size = atoi(sizeTemp.c_str());
+   //ignore invalid sizes
+   if(size <= 0)
+   {
+      return;
+   }
+   //otherwise resize
+   squareSize = size;
+   //must update scroll bars now
+   updateScrollBars();
+}
+
+void MainWindow::updateScrollBars()
+{
+   //determine max height and width
+   auto maxWidth = grid.getWidth() * squareSize;
+   auto maxHeight = grid.getHeight() * squareSize;
+   //if either is invalid ignore this
+   if(maxWidth <= 0 || maxHeight <= 0)
+   {
+      return;
+   }
+   //otherwise get the window size
+   const auto winSize = window.getSize();
+   const auto winWidth = winSize.x;
+   const auto winHeight = winSize.y;
+   const auto scrollHeight = scrollHorz->GetAllocation().height;
+   const auto scrollWidth = scrollVert->GetAllocation().width;
+   const auto frameWidth = winWidth - scrollWidth - menuWidth;
+   const auto frameHeight = winHeight - scrollHeight;
+   //code is the same for width and height; abstract it out
+   auto resizeScroller = [this](unsigned maxSize,
+                                unsigned areaAllowed,
+                                sfg::Scrollbar::Ptr& scroller,
+                                std::function<void()> handler)
+      {
+         if(maxSize <= areaAllowed)
+         {
+            //get the disabled look
+            scroller->SetState(sfg::Widget::State::INSENSITIVE);
+            scroller->SetAdjustment(
+                      sfg::Adjustment::Create(0.f, 0.f, 0.f, 0.f, 0.f, 10.f));
+         }
+         else
+         {
+            //otherwise need to adjust
+            scroller->SetState(sfg::Widget::State::NORMAL);
+            //get the old values, and keep them
+            auto old = scroller->GetAdjustment();
+            //there are areaAllowed entries visible
+            auto visible = 1.f * areaAllowed;
+            //upper value is number of squares for that size
+            auto upper = 1.f * maxSize;
+            //the new value
+            float newValue = old->GetValue();
+            //if value is less than the minimum + visible then keep it
+            if(newValue + visible > maxSize)
+            {
+               //otherwise just use the furthest value
+               newValue = maxSize - visible;
+            }
+            //lower limit will always be 0
+            auto adj = sfg::Adjustment::Create(newValue,
+                                               0.f,
+                                               upper,
+                                               1.f * squareSize,
+                                               .5f * squareSize,
+                                               visible);
+            scroller->SetAdjustment(adj);
+            //have to redraw it now
+            scroller->Invalidate();
+            //set up signals
+            scroller->GetAdjustment()->
+                  GetSignal(sfg::Adjustment::OnChange).Connect(handler);
+         }
+      };
+   //now actually resize the scrollers
+   resizeScroller(maxWidth, frameWidth, scrollHorz,
+                  [this, frameWidth]()
+                  {
+                     //find distance moved and move view
+                     auto loc = view.getCenter();
+                     auto x = loc.x - frameWidth/2.f;
+                     auto xChange = scrollHorz->GetValue() - x;
+                     view.move(xChange, 0.f);
+                  });
+   resizeScroller(maxHeight, frameHeight, scrollVert,
+                  [this, frameHeight]()
+                  {
+                     //find distance moved and move view
+                     auto loc = view.getCenter();
+                     auto y = loc.y - frameHeight/2.f;
+                     auto yChange = scrollVert->GetValue() - y;
+                     view.move(0.f, yChange);
+                  });
 }
 
 void MainWindow::run()
@@ -158,10 +289,40 @@ void MainWindow::run()
       window.pushGLStates();
          //set the view and draw the grid
          window.setView(view);
-         auto rect = sf::RectangleShape({100000, 100000});
-         rect.setFillColor(sf::Color::Red);
-         rect.setPosition(0.f, 0.f);
-         window.draw(rect);
+         //first clear the background
+         auto clearRect = sf::RectangleShape({100000, 100000});
+         clearRect.setFillColor({86, 86, 86});
+         window.draw(clearRect);
+         //now draw the grid
+         auto rect = sf::RectangleShape({1.f * squareSize, 1.f * squareSize});
+         rect.setOutlineThickness(1.f);
+         rect.setOutlineColor(sf::Color::Black);
+         sf::Color rectColor;
+         for(auto y = 0u; y < grid.getHeight(); ++y)
+         {
+            for(auto x = 0u; x < grid.getWidth(); ++x)
+            {
+               //set up the color
+               switch(grid.getTile(x, y).status)
+               {
+                  case Tile::Status::nothing:
+                     rectColor = sf::Color::White;
+                     break;
+
+                  case Tile::Status::path:
+                     rectColor = sf::Color::Red;
+                     break;
+
+                  case Tile::Status::visited:
+                     rectColor = {127, 127, 127};
+                     break;
+               }
+               //set color and position and then draw
+               rect.setFillColor(rectColor);
+               rect.setPosition(1.f * squareSize * x, 1.f * squareSize * y);
+               window.draw(rect);
+            }
+         }
       window.popGLStates();
 
       window.display();
