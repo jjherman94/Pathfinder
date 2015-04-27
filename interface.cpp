@@ -11,6 +11,7 @@ MainWindow::MainWindow(unsigned width,
    tableY(0),
    menuWidth(menuWidth),
    squareSize(0),
+   algorithms(),
    sfgui(),
    scrollVert(sfg::Scrollbar::Create(sfg::Scrollbar::Orientation::VERTICAL)),
    scrollHorz(sfg::Scrollbar::Create()),
@@ -46,7 +47,7 @@ MainWindow::MainWindow(unsigned width,
    //fill in the table
    addItemToTable(sfg::Label::Create("Algorithm:"), 3);
    addItemToTable(algComboBox, 3);
-   addItemToTable(isWeighted, 3);
+   //addItemToTable(isWeighted, 3);
    addItemToTable(sfg::Label::Create("Map Size:"), 3);
    addItemToTable(xEntry, 1);
    addItemToTable(sfg::Label::Create("x"), 1);
@@ -360,4 +361,10 @@ void MainWindow::run()
 
       window.display();
    }
+}
+
+void MainWindow::addAlgorithm(std::unique_ptr<Algorithm>&& alg)
+{
+   algComboBox->AppendItem(alg->name());
+   algorithms.push_back(std::move(alg));
 }

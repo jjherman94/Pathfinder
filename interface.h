@@ -3,12 +3,15 @@
 
 #include <SFGUI/SFGUI.hpp>
 #include "gridMap.h"
+#include "algorithmClass.h"
 
 class MainWindow
 {
 public:
    //begin running the window
    void run();
+   //adds an algorithm to the list
+   void addAlgorithm(std::unique_ptr<Algorithm>&& alg);
    //basic constructor, all sizes are in pixels
    MainWindow(unsigned width,
               unsigned height,
@@ -39,6 +42,8 @@ private:
    unsigned menuWidth;
    //the size of the squares, in pixels
    unsigned squareSize;
+   //the algorithms
+   std::vector<std::unique_ptr<Algorithm>> algorithms;
 
    //GUI elements below here
    //for SFGUI to do anything
