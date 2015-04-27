@@ -18,10 +18,16 @@ struct Tile
    Status status;
 };
 
+struct Location
+{
+   // the location
+   int x, y;
+};
+
 struct Path
 {
-   std::vector<Tile> visisted;
-   std::vector<Tile> path;
+   std::vector<Location> visisted;
+   std::vector<Location> path;
 };
 
 #endif // PATH_H

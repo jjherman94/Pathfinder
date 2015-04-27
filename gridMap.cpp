@@ -31,6 +31,11 @@ Tile& gridMap::getTile(int x, int y)
    return tiles[x + y * width];
 }
 
+Tile& gridMap::getTile(const Location& loc)
+{
+   return getTile(loc.x, loc.y);
+}
+
 unsigned gridMap::getWidth() const
 {
    return width;

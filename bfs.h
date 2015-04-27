@@ -7,8 +7,8 @@ class BFS : public Algorithm
 {
    virtual std::string name() const override;
    //finds a path from two points
-   virtual Path findPath(const std::pair<int, int>& start,
-                         const std::pair<int, int>& end,
+   virtual Path findPath(const Location& start,
+                         const Location& end,
                          const gridMap& grid) const override;
 };
 

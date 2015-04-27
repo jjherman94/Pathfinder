@@ -6,8 +6,8 @@ std::string BFS::name() const
 }
 
 
-Path BFS::findPath(const std::pair<int, int>& start,
-                   const std::pair<int, int>& end,
+Path BFS::findPath(const Location& start,
+                   const Location& end,
                    const gridMap& grid) const
 {
    return Path();

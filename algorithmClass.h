@@ -11,8 +11,8 @@ public:
    //returns the name of the function
    virtual std::string name() const = 0;
    //finds a path from two points
-   virtual Path findPath(const std::pair<int, int>& start,
-                         const std::pair<int, int>& end,
+   virtual Path findPath(const Location& start,
+                         const Location& end,
                          const gridMap& grid) const = 0;
 };
 

@@ -11,6 +11,8 @@ public:
    void resize(unsigned width, unsigned height);
    //returns the tile at the given x, y position
    Tile& getTile(int x, int y);
+   //returns the tile at the given location
+   Tile& getTile(const Location& loc);
    //returns the width
    unsigned getWidth() const;
    //returns the height
