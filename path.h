@@ -22,6 +22,17 @@ struct Location
 {
    // the location
    int x, y;
+   Location operator=(Location rhs)
+   {
+    x=rhs.x;
+    y=rhs.y;
+    return *this;
+   }
+   
+   bool operator==(Location rhs)
+   {
+      return ( x == rhs.x && y == rhs.y);
+   }
 };
 
 struct Path
