@@ -41,6 +41,11 @@ Tile& gridMap::getTile(const Location& loc)
    return getTile(loc.x, loc.y);
 }
 
+const Tile& gridMap::getTile(const Location& loc) const
+{
+   return getTile(loc.x, loc.y);
+}
+
 unsigned gridMap::getWidth() const
 {
    return width;
