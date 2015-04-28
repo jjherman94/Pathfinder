@@ -26,7 +26,7 @@ struct Location
 
 struct Path
 {
-   std::vector<Location> visisted;
+   std::vector<Location> visited;
    std::vector<Location> path;
 };
 
