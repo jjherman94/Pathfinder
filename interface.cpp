@@ -275,7 +275,8 @@ void MainWindow::run()
             //resize contents if needed
             handleResize();
          }
-         else if(event.type == sf::Event::MouseMoved)
+         else if(event.type == sf::Event::MouseMoved ||
+                 event.type == sf::Event::MouseButtonPressed)
          {
             //if a button is pressed then make/destroy walls
             if(sf::Mouse::isButtonPressed(sf::Mouse::Left) ||
@@ -289,6 +290,11 @@ void MainWindow::run()
                auto yLim = frameAlloc.height + yBase;
                auto x = event.mouseMove.x + xBase;
                auto y = event.mouseMove.y + yBase;
+               if(event.type == sf::Event::MouseButtonPressed)
+               {
+                  x = event.mouseButton.x;
+                  y = event.mouseButton.y;
+               }
                //make sure that they are valid
                if(x >= xBase && y >= yBase && x < xLim && y < yLim &&
                   x/squareSize < grid.getWidth() &&
