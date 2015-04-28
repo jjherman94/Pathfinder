@@ -18,9 +18,9 @@ struct Tile
    Status status;
 };
 
+// the location
 struct Location
 {
-   // the location
    int x, y;
    Location operator=(Location rhs)
    {
@@ -29,10 +29,18 @@ struct Location
     return *this;
    }
    
-   bool operator==(Location rhs)
+   bool operator==(Location rhs) const
    {
-      return ( x == rhs.x && y == rhs.y);
+      return (x == rhs.x && y == rhs.y);
    }
+   
+   Location(int a, int b)
+   {
+      x=a;
+      y=b;
+   }
+   
+   Location(){}
 };
 
 struct Path
